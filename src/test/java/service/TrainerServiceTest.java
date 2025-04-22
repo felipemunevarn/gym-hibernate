@@ -13,8 +13,6 @@ import com.epam.util.UsernamePasswordUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
@@ -34,11 +32,12 @@ class TrainerServiceTest {
     @Mock
     private UsernamePasswordUtil usernamePasswordUtil;
 
+    private TrainingType trainingType;
+    private TrainingType updatedTrainingType;
+
     @InjectMocks
     private TrainerService trainerService;
 
-    private final TrainingType trainingType = trainingTypeRepository.findByType(TrainingTypeEnum.CARDIO)
-            .orElseThrow(() -> new IllegalStateException("TrainingType not found"));
     private final User user = new User.Builder()
             .firstName("John")
             .lastName("Doe")
@@ -54,6 +53,9 @@ class TrainerServiceTest {
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
+
+        trainingType = new TrainingType(TrainingTypeEnum.CARDIO);
+        updatedTrainingType = new TrainingType(TrainingTypeEnum.CARDIO);
     }
 
     @Test
@@ -113,12 +115,10 @@ class TrainerServiceTest {
 
     @Test
     void testUpdateTrainer_Success() {
-        TrainingType newType = trainingTypeRepository.findByType(TrainingTypeEnum.CARDIO)
-                .orElseThrow(() -> new IllegalStateException("TrainingType not found"));
         when(trainerRepository.findByUserUsername("john.doe")).thenReturn(Optional.of(trainer));
         when(userService.authenticate("john.doe", "password123")).thenReturn(true);
 
-        trainerService.updateTrainer("john.doe", "password123", newType);
+        trainerService.updateTrainer("john.doe", "password123", updatedTrainingType);
 
         verify(trainerRepository).save(any(Trainer.class));
     }

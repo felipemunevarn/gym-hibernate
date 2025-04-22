@@ -4,6 +4,7 @@ import com.epam.entity.Trainer;
 import com.epam.entity.TrainingType;
 import com.epam.entity.User;
 import com.epam.repository.TrainerRepository;
+import com.epam.repository.TrainingTypeRepository;
 import com.epam.repository.UserRepository;
 import com.epam.util.UsernamePasswordUtil;
 import jakarta.transaction.Transactional;
@@ -19,14 +20,14 @@ public class TrainerService {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final TrainerRepository trainerRepository;
-    private final UserRepository userRepository;
+    private final TrainingTypeRepository trainingTypeRepository;
     private final UserService userService;
     private final UsernamePasswordUtil usernamePasswordUtil;
 
     @Autowired
-    public TrainerService(TrainerRepository trainerRepository, UserRepository userRepository, UserService userService, UsernamePasswordUtil usernamePasswordUtil) {
+    public TrainerService(TrainerRepository trainerRepository, TrainingTypeRepository trainingTypeRepository, UserService userService, UsernamePasswordUtil usernamePasswordUtil) {
         this.trainerRepository = trainerRepository;
-        this.userRepository = userRepository;
+        this.trainingTypeRepository = trainingTypeRepository;
         this.userService = userService;
         this.usernamePasswordUtil = usernamePasswordUtil;
     }
