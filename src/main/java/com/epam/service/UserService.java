@@ -53,51 +53,48 @@ public class UserService {
     public boolean authenticate(String username, String password) {
         log.info("Authenticating user: {}", username);
         Optional<User> userOpt = userRepository.findByUsername(username);
-        // Check if user exists, is active, and password matches
         if (userOpt.isPresent() && userOpt.get().isActive()) {
             User user = userOpt.get();
-            // Use the utility to check the raw password against the stored hash
             boolean matches = usernamePasswordUtil.checkPassword(password, user.getPassword());
             if(matches) {
                 log.info("Authentication successful for user: {}", username);
                 return true;
             } else {
                 log.warn("Authentication failed for user: {} - Incorrect password", username);
-                return false; // Password mismatch
+                return false;
             }
         }
         log.warn("Authentication failed for user: {} - User not found or inactive", username);
-        return false; // User not found or not active
+        return false;
     }
 
-//    @Transactional // This method modifies data, so needs a read-write transaction
-//    public void changePassword(String username, String oldPassword, String newPassword) {
-//        log.info("Attempting to change password for user: {}", username);
-//        // Step 1: Authenticate the user with the old password
-//        if (!authenticate(username, oldPassword)) {
-//            log.error("Password change failed for {}: Authentication failed (old password incorrect or user inactive/not found).", username);
-//            throw new SecurityException("Authentication failed for password change.");
-//        }
-//
-//        // Step 2: Fetch the user (should exist if authentication passed)
-//        User user = userRepository.findByUsername(username)
-//                .orElseThrow(() -> {
-//                    log.error("Password change failed: User {} not found after successful authentication.", username); // Should not happen
-//                    return new NoResultException("User not found: " + username);
-//                });
-//
-//        // Step 3: Validate the new password (e.g., length, complexity - add rules if needed)
-//        if (newPassword == null || newPassword.isBlank()) {
-//            log.error("Password change failed for {}: New password cannot be empty.", username);
-//            throw new IllegalArgumentException("New password cannot be empty.");
-//        }
-//
-//        // Step 4: Hash the new password and update the user
-//        user.with(builder -> builder.password(passwordUtil.hashPassword(newPassword)));
-//
-//        userRepository.save(user); // Persist the change
-//        log.info("Password changed successfully for user: {}", username);
-//    }
+    @Transactional
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        log.info("Attempting to change password for trainee: {}", username);
+
+        if (!authenticate(username, oldPassword)) {
+            log.error("Password change failed for {}: Authentication failed (old password incorrect or user inactive/not found).", username);
+            throw new SecurityException("Authentication failed for password change.");
+        }
+
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> {
+                log.error("Password change failed: User {} not found after successful authentication.", username); // Should not happen
+                return new NoResultException("User not found: " + username);
+            });
+
+        if (newPassword == null || newPassword.isBlank()) {
+            log.error("Password change failed for {}: New password cannot be empty.", username);
+            throw new IllegalArgumentException("New password cannot be empty.");
+        }
+
+        user = user.toBuilder()
+            .password(usernamePasswordUtil.hashPassword(newPassword))
+            .build();
+
+        userRepository.save(user); // Persist the change
+        log.info("Password changed successfully for user: {}", username);
+    }
 
     @Transactional
     public void setActiveStatus(String username, boolean isActive) {
@@ -110,9 +107,6 @@ public class UserService {
         User updated = user.toBuilder()
                         .isActive(isActive)
                                 .build();
-//        user.setActive(isActive);
-//        user.with(builder -> builder.isActive(isActive));
-        // Persist the change
         userRepository.save(updated);
         log.info("Active status updated successfully for user: {}", username);
     }
