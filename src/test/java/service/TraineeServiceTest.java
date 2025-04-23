@@ -1,10 +1,13 @@
 package service;
 
 import com.epam.entity.Trainee;
+import com.epam.entity.Training;
 import com.epam.entity.User;
 import com.epam.repository.TraineeRepository;
+import com.epam.repository.TrainingRepository;
 import com.epam.repository.UserRepository;
 import com.epam.service.TraineeService;
+import com.epam.service.TrainingService;
 import com.epam.service.UserService;
 import com.epam.util.UsernamePasswordUtil;
 import jakarta.persistence.NoResultException;
@@ -13,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.*;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,7 +27,9 @@ public class TraineeServiceTest {
     @Mock
     private TraineeRepository traineeRepository;
     @Mock
-    private UserRepository userRepository;
+    private TrainingRepository trainingRepository;
+    @Mock
+    private TrainingService trainingService;
     @Mock
     private UserService userService;
     @Mock
@@ -110,12 +116,25 @@ public class TraineeServiceTest {
     }
 
     @Test
-    void testDeleteTrainee() {
-        User user = new User.Builder().username("john").build();
-        Trainee trainee = new Trainee.Builder().user(user).build();
-        when(traineeRepository.findByUserUsername("john")).thenReturn(Optional.of(trainee));
+    void testDeleteTrainee_WithTrainings() {
+        String username = "john";
 
-        traineeService.deleteTrainee("john");
-        verify(traineeRepository).deleteByUserUsername("john");
+        User user = new User.Builder().username(username).build();
+        Trainee trainee = new Trainee.Builder().user(user).build();
+        Training training1 = Training.builder().build();
+        Training training2 = Training.builder().build();
+        List<Training> trainingList = List.of(training1, training2);
+
+        when(trainingService.getTraineeTrainings(eq(username), any(), any(), any(), any()))
+                .thenReturn(trainingList);
+        when(traineeRepository.findByUserUsername(username))
+                .thenReturn(Optional.of(trainee));
+
+        traineeService.deleteTrainee(username);
+
+        verify(trainingRepository).delete(training1);
+        verify(trainingRepository).delete(training2);
+        verify(traineeRepository).deleteByUserUsername(username);
     }
+
 }

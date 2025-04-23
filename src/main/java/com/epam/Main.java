@@ -26,15 +26,15 @@ public class Main {
                 .orElseThrow(() -> new IllegalStateException("TrainingType not found"));
         TrainingType newTrainingType = trainingTypeRepository.findByType(TrainingTypeEnum.STRENGTH)
                 .orElseThrow(() -> new IllegalStateException("TrainingType not found"));
-//        trainerService.createTrainer("William", "Smith", newTrainingType);
-//        trainingService.createTraining("john.doe3",
-//                "jxwm5mAaud",
-//                "john.doe3",
-//                "william.smith",
-//                "yoga at night",
+//        trainerService.createTrainer("Carlos", "Valderrama", newTrainingType);
+//        trainingService.createTraining("john.doe4",
+//                "yunTycejIJ",
+//                "john.doe4",
+//                "john.doe5",
+//                "morning yoga",
 //                trainingType,
 //                LocalDate.of(2025,4,20),
-//                135);
+//                45);
 //        System.out.println("Trainee verified: " + traineeService.authenticate("john.doe3", "jxwm5mAaud"));
 //        System.out.println("Trainee verified: " + traineeService.authenticate("john.doe3", "1234abcd"));
 //        System.out.println("Trainee: " + traineeService.findByUsername("john.doe3"));
@@ -50,8 +50,10 @@ public class Main {
 //        traineeService.changeActiveStatus("john.doe3", true);
 //        trainerService.changeActiveStatus("john.doe5", "VFYA63Qd28", false);
 //        trainerService.changeActiveStatus("john.doe5", "VFYA63Qd28", true);
-        traineeService.deleteTrainee("john.doe3");
-//        List<Training> trainings = trainingService.getTraineeTrainings("john.doe3",null, null, "William", null);
+//        List<Trainer> trainers = trainerService.getUnassignedTrainersForTrainee("john.doe4");
+//        System.out.println(trainers.get(0).getUser().getLastName());
+//        traineeService.deleteTrainee("john.doe3");
+//        List<Training> trainings = trainingService.getTraineeTrainings("john.doe4",null, null, "William", null);
 //        System.out.println(trainings);
 //        System.out.println(trainings.getLast().getTrainer());
         context.close();

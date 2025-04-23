@@ -10,10 +10,14 @@ import com.epam.repository.UserRepository;
 import com.epam.service.TrainerService;
 import com.epam.service.UserService;
 import com.epam.util.UsernamePasswordUtil;
+import jakarta.persistence.NoResultException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -132,5 +136,78 @@ class TrainerServiceTest {
 
         verify(userService).setActiveStatus("john.doe", false);
     }
+
+    @Test
+    void testGetUnassignedTrainersForTrainee() {
+        String traineeUsername = "jane.doe";
+
+        Trainer trainer1 = Trainer.builder().build();
+        Trainer trainer2 = Trainer.builder().build();
+        List<Trainer> mockUnassigned = Arrays.asList(trainer1, trainer2);
+
+        when(trainerRepository.findTrainersNotAssignedToTrainee(traineeUsername))
+                .thenReturn(mockUnassigned);
+
+        List<Trainer> result = trainerService.getUnassignedTrainersForTrainee(traineeUsername);
+
+        assertEquals(2, result.size());
+        assertSame(trainer1, result.get(0));
+        assertSame(trainer2, result.get(1));
+
+        verify(trainerRepository, times(1)).findTrainersNotAssignedToTrainee(traineeUsername);
+    }
+
+    @Test
+    void testChangeActiveStatus_TrainerNotFound() {
+        when(trainerRepository.findByUserUsername("john.doe")).thenReturn(Optional.empty());
+
+        assertThrows(NoResultException.class, () ->
+                trainerService.changeActiveStatus("john.doe", "password123", false));
+    }
+
+    @Test
+    void testChangeActiveStatus_Unauthorized() {
+        when(trainerRepository.findByUserUsername("john.doe")).thenReturn(Optional.of(trainer));
+        when(userService.authenticate("john.doe", "wrongpass")).thenReturn(false);
+
+        assertThrows(SecurityException.class, () ->
+                trainerService.changeActiveStatus("john.doe", "wrongpass", true));
+    }
+
+    @Test
+    void testUpdateTrainer_TrainerNotFound() {
+        when(trainerRepository.findByUserUsername("john.doe")).thenReturn(Optional.empty());
+
+        assertThrows(NoResultException.class, () ->
+                trainerService.updateTrainer("john.doe", "password123", updatedTrainingType));
+    }
+
+    @Test
+    void testUpdateTrainer_Unauthorized() {
+        when(trainerRepository.findByUserUsername("john.doe")).thenReturn(Optional.of(trainer));
+        when(userService.authenticate("john.doe", "wrongpass")).thenReturn(false);
+
+        assertThrows(SecurityException.class, () ->
+                trainerService.updateTrainer("john.doe", "wrongpass", updatedTrainingType));
+    }
+
+    @Test
+    void testChangeTrainerPassword_TrainerNotFound() {
+        when(trainerRepository.findByUserUsername("john.doe")).thenReturn(Optional.empty());
+
+        assertThrows(NoResultException.class, () ->
+                trainerService.changeTrainerPassword("john.doe", "oldpass", "newpass"));
+    }
+
+    @Test
+    void testChangeTrainerPassword_Unauthorized() {
+        when(trainerRepository.findByUserUsername("john.doe")).thenReturn(Optional.of(trainer));
+        when(userService.authenticate("john.doe", "wrongpass")).thenReturn(false);
+
+        assertThrows(SecurityException.class, () ->
+                trainerService.changeTrainerPassword("john.doe", "wrongpass", "newpass"));
+    }
+
+
 }
 

@@ -8,6 +8,7 @@ import com.epam.entity.User;
 import com.epam.repository.UserRepository;
 import com.epam.service.UserService;
 import com.epam.util.UsernamePasswordUtil;
+import jakarta.persistence.NoResultException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +22,6 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
-
     @Mock
     private UsernamePasswordUtil usernamePasswordUtil;
 
@@ -101,25 +101,73 @@ class UserServiceTest {
 
     @Test
     void authenticate_UserNotFound() {
-        // Arrange
         when(userRepository.findByUsername("non.existing")).thenReturn(Optional.empty());
 
-        // Act
         boolean result = userService.authenticate("non.existing", "password123");
 
-        // Assert
         assertFalse(result);
     }
 
     @Test
     void createUser_ExceptionHandling() {
-        // Arrange
         when(usernamePasswordUtil.generateUsername(anyString(), anyString())).thenReturn("john.doe");
         when(usernamePasswordUtil.generatePassword()).thenReturn("tempPassword123");
         when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("DB Error"));
 
-        // Act & Assert
         assertDoesNotThrow(() -> userService.createUser(testUser));
         verify(userRepository).save(any(User.class));
     }
+
+    @Test
+    void changePassword_Success() {
+        when(userRepository.findByUsername("john.doe"))
+                .thenReturn(Optional.of(testUser));
+        when(usernamePasswordUtil.checkPassword("oldPass", "hashedPassword"))
+                .thenReturn(true);
+        when(usernamePasswordUtil.hashPassword("newPass"))
+                .thenReturn("hashedNewPass");
+
+        userService.changePassword("john.doe", "oldPass", "newPass");
+
+        verify(userRepository).save(argThat(user -> user.getPassword().equals("hashedNewPass")));
+    }
+
+    @Test
+    void changePassword_InvalidOldPassword() {
+        when(userRepository.findByUsername("john.doe"))
+                .thenReturn(Optional.of(testUser));
+        when(usernamePasswordUtil.checkPassword("wrongOldPass", "hashedPassword"))
+                .thenReturn(false);
+
+        assertThrows(SecurityException.class, () ->
+                userService.changePassword("john.doe", "wrongOldPass", "newPass"));
+    }
+
+    @Test
+    void changePassword_NewPasswordBlank() {
+        when(userRepository.findByUsername("john.doe"))
+                .thenReturn(Optional.of(testUser));
+        when(usernamePasswordUtil.checkPassword("oldPass", "hashedPassword"))
+                .thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                userService.changePassword("john.doe", "oldPass", " "));
+    }
+
+    @Test
+    void setActiveStatus_Success() {
+        when(userRepository.findByUsername("john.doe")).thenReturn(Optional.of(testUser));
+
+        userService.setActiveStatus("john.doe", false);
+
+        verify(userRepository).save(argThat(user -> !user.isActive()));
+    }
+
+    @Test
+    void setActiveStatus_UserNotFound() {
+        when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+
+        assertThrows(NoResultException.class, () -> userService.setActiveStatus("unknown", true));
+    }
+
 }

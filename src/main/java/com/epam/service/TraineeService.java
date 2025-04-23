@@ -112,8 +112,10 @@ public class TraineeService {
     @Transactional
     public void deleteTrainee(String username) {
         List<Training> trainings = trainingService.getTraineeTrainings(username,null,null,null,null);
-        for (Training t : trainings) {
-            trainingRepository.delete(t);
+        if (!trainings.isEmpty()) {
+            for (Training t : trainings) {
+                trainingRepository.delete(t);
+            }
         }
         Optional<Trainee> optTrainee = findByUsername(username);
         traineeRepository.deleteByUserUsername(username);

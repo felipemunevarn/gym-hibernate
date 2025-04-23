@@ -7,12 +7,14 @@ import com.epam.repository.TrainerRepository;
 import com.epam.repository.TrainingTypeRepository;
 import com.epam.repository.UserRepository;
 import com.epam.util.UsernamePasswordUtil;
+import jakarta.persistence.NoResultException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -84,8 +86,10 @@ public class TrainerService {
         Optional<Trainer> optTrainer = findByUsername(username);
         if (optTrainer.isEmpty()) {
             log.error("User with username: {} is not a trainer", username);
+            throw new NoResultException("Trainer not found: " + username);
         } else if (!authenticate(username, oldPassword)) {
             log.warn("Authentication failed for {}", username);
+            throw new SecurityException("Authentication failed");
         } else {
             userService.changePassword(username, oldPassword, newPassword);
         }
@@ -96,8 +100,10 @@ public class TrainerService {
         Optional<Trainer> optTrainer = findByUsername(username);
         if (optTrainer.isEmpty()) {
             log.error("User with username: {} is not a trainer", username);
+            throw new NoResultException("Trainer not found: " + username);
         } else if (!authenticate(username, password)) {
             log.warn("Authentication failed for {}", username);
+            throw new SecurityException("Authentication failed");
         }
         Trainer trainer = optTrainer.get().toBuilder()
                 .trainingType(newTrainingType)
@@ -111,10 +117,18 @@ public class TrainerService {
         Optional<Trainer> optTrainer = findByUsername(username);
         if (optTrainer.isEmpty()) {
             log.error("User with username: {} is not a trainer", username);
+            throw new NoResultException("Trainer not found: " + username);
         } else if (!authenticate(username, password)) {
             log.warn("Authentication failed for {}", username);
+            throw new SecurityException("Authentication failed");
         }
         userService.setActiveStatus(username, isActive);
+    }
+
+    @Transactional
+    public List<Trainer> getUnassignedTrainersForTrainee(String username) {
+        List<Trainer> trainers = trainerRepository.findTrainersNotAssignedToTrainee(username);
+        return trainers;
     }
 
 }
