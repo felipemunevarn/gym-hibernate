@@ -1,8 +1,10 @@
 package com.epam.service;
 
 import com.epam.entity.Trainee;
+import com.epam.entity.Training;
 import com.epam.entity.User;
 import com.epam.repository.TraineeRepository;
+import com.epam.repository.TrainingRepository;
 import com.epam.repository.UserRepository;
 import com.epam.util.UsernamePasswordUtil;
 import jakarta.persistence.NoResultException;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -20,14 +23,20 @@ public class TraineeService {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final TraineeRepository traineeRepository;
-    private final UserRepository userRepository;
+    private final TrainingRepository trainingRepository;
+    private final TrainingService trainingService;
     private final UserService userService;
     private final UsernamePasswordUtil usernamePasswordUtil;
 
     @Autowired
-    public TraineeService(TraineeRepository traineeRepository, UserRepository userRepository, UserService userService, UsernamePasswordUtil usernamePasswordUtil) {
+    public TraineeService(TraineeRepository traineeRepository,
+                          TrainingRepository trainingRepository,
+                          TrainingService trainingService,
+                          UserService userService,
+                          UsernamePasswordUtil usernamePasswordUtil) {
         this.traineeRepository = traineeRepository;
-        this.userRepository = userRepository;
+        this.trainingRepository = trainingRepository;
+        this.trainingService = trainingService;
         this.userService = userService;
         this.usernamePasswordUtil = usernamePasswordUtil;
     }
@@ -102,6 +111,10 @@ public class TraineeService {
 
     @Transactional
     public void deleteTrainee(String username) {
+        List<Training> trainings = trainingService.getTraineeTrainings(username,null,null,null,null);
+        for (Training t : trainings) {
+            trainingRepository.delete(t);
+        }
         Optional<Trainee> optTrainee = findByUsername(username);
         traineeRepository.deleteByUserUsername(username);
         log.info("Trainee deleted with username: {}", username);

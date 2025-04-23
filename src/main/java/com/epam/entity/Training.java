@@ -1,6 +1,8 @@
 package com.epam.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
 
@@ -12,8 +14,9 @@ public class Training {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne // (cascade = CascadeType.REMOVE)
     @JoinColumn(name = "trainee_id")
+//    @OnDelete(action = OnDeleteAction.CASCADE)
     private Trainee trainee;
 
     @ManyToOne

@@ -50,10 +50,10 @@ public class Main {
 //        traineeService.changeActiveStatus("john.doe3", true);
 //        trainerService.changeActiveStatus("john.doe5", "VFYA63Qd28", false);
 //        trainerService.changeActiveStatus("john.doe5", "VFYA63Qd28", true);
-//        traineeService.deleteTrainee("john.doe3");
-        List<Training> trainings = trainingService.getTraineeTrainings("john.doe3",null, null, "William", null);
-        System.out.println(trainings);
-        System.out.println(trainings.getLast().getTrainer().getUser());
+        traineeService.deleteTrainee("john.doe3");
+//        List<Training> trainings = trainingService.getTraineeTrainings("john.doe3",null, null, "William", null);
+//        System.out.println(trainings);
+//        System.out.println(trainings.getLast().getTrainer());
         context.close();
     }
 }
